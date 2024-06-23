@@ -1,4 +1,4 @@
-use std::ops::Mul;
+use std::ops::{Mul, Div};
 
 use derive_more::{Add, Sub, Neg};
 use super::eq;
@@ -46,6 +46,10 @@ impl Tuple {
     fn is_point(&self) -> bool {
         return self.w == 1.0;
     }
+
+    fn magnitude(&self) -> f32 {
+        (self.x.powi(2) + self.y.powi(2) + self.z.powi(2) + self.w.powi(2)).sqrt()
+    }
 }
 
 impl PartialEq for Tuple {
@@ -66,6 +70,19 @@ impl Mul<f32> for Tuple {
             y: self.y * factor,
             z: self.z * factor,
             w: self.w * factor,            
+        }
+    }
+}
+
+impl Div<f32> for Tuple {
+    type Output = Tuple;
+
+    fn div(self, factor: f32) -> Self::Output {
+        Self {
+            x: self.x / factor,
+            y: self.y / factor,
+            z: self.z / factor,
+            w: self.w / factor,            
         }
     }
 }
@@ -158,5 +175,38 @@ mod tests {
 
         let tuple = Tuple::new(-1.0, 2.0, -3.0, 4.0);
         assert_eq!(-tuple, Tuple::new(1.0, -2.0, 3.0, -4.0));
+    }
+
+    #[test]
+    fn mul_scalar() {
+        let tuple = Tuple::new(1.0, -2.0, 3.0, -4.0);
+        assert_eq!(tuple * 3.5, Tuple::new(3.5, -7.0, 10.5, -14.0));
+
+        let tuple = Tuple::new(1.0, -2.0, 3.0, -4.0);
+        assert_eq!(tuple * 0.5, Tuple::new(0.5, -1.0, 1.5, -2.0));
+    }
+
+    #[test]
+    fn div_scalar() {
+        let tuple = Tuple::new(1.0, -2.0, 3.0, -4.0);
+        assert_eq!(tuple / 2.0, Tuple::new(0.5, -1.0, 1.5, -2.0));
+    }
+
+    #[test]
+    fn magnitude() {
+        let vector = Tuple::vector(1.0, 0.0, 0.0);
+        assert_eq!(vector.magnitude(), 1.0);
+
+        let vector = Tuple::vector(0.0, 1.0, 0.0);
+        assert_eq!(vector.magnitude(), 1.0);
+
+        let vector = Tuple::vector(0.0, 0.0, 1.0);
+        assert_eq!(vector.magnitude(), 1.0);
+
+        let vector = Tuple::vector(1.0, 2.0, 3.0);
+        assert_eq!(vector.magnitude(), 14.0_f32.sqrt());
+
+        let vector = Tuple::vector(-1.0, -2.0, -3.0);
+        assert_eq!(vector.magnitude(), 14.0_f32.sqrt());
     }
 }
