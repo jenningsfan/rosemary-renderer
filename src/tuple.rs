@@ -62,6 +62,14 @@ impl Tuple {
     fn dot(&self, other: Self) -> f32 {
         *self * other
     }
+
+    fn cross(&self, other: Self) -> Self {
+        Self::vector(
+            self.y * other.z - self.z * other.y,
+            self.z * other.x - self.x * other.z,
+            self.x * other.y - self.y * other.x,
+        )
+    }
 }
 
 impl PartialEq for Tuple {
@@ -89,8 +97,11 @@ impl Mul<f32> for Tuple {
 impl Mul<Tuple> for Tuple {
     type Output = f32;
 
-    fn mul(self, factor: Tuple) -> Self::Output {
-        0.0
+    fn mul(self, other: Tuple) -> Self::Output {
+        self.x * other.x +
+        self.y * other.y +
+        self.z * other.z +
+        self.w * other.w
     }
 }
 
@@ -238,5 +249,20 @@ mod tests {
         let vector = Tuple::vector(1.0, 2.0, 3.0);
         assert_eq!(vector.norm(), Tuple::vector(0.26726, 0.53452, 0.80178));
         assert!(eq(vector.norm().magnitude(), 1.0));
+    }
+
+    #[test]
+    fn dot() {
+        let vector1 = Tuple::vector(1.0, 2.0, 3.0);
+        let vector2 = Tuple::vector(2.0, 3.0, 4.0);
+        assert_eq!(vector1 * vector2, 20.0);
+    }
+
+    #[test]
+    fn cross() {
+        let vector1 = Tuple::vector(1.0, 2.0, 3.0);
+        let vector2 = Tuple::vector(2.0, 3.0, 4.0);
+        assert_eq!(vector1.cross(vector2), Tuple::vector(-1.0, 2.0, -1.0));
+        assert_eq!(vector2.cross(vector1), Tuple::vector(1.0, -2.0, 1.0));
     }
 }
