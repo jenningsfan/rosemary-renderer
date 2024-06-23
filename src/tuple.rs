@@ -3,7 +3,7 @@ use std::ops::{Mul, Div};
 use derive_more::{Add, Sub, Neg};
 use super::eq;
 
-#[derive(Debug, Add, Sub, Neg)]
+#[derive(Debug, Clone, Copy, Add, Sub, Neg)]
 struct Tuple {
     x: f32,
     y: f32,
@@ -50,6 +50,18 @@ impl Tuple {
     fn magnitude(&self) -> f32 {
         (self.x.powi(2) + self.y.powi(2) + self.z.powi(2) + self.w.powi(2)).sqrt()
     }
+
+    fn norm(&self) -> Self {
+        *self / self.magnitude()
+    }
+
+    fn mul_scalar(&self, factor: f32) -> Self {
+        *self * factor
+    }
+
+    fn dot(&self, other: Self) -> f32 {
+        *self * other
+    }
 }
 
 impl PartialEq for Tuple {
@@ -71,6 +83,14 @@ impl Mul<f32> for Tuple {
             z: self.z * factor,
             w: self.w * factor,            
         }
+    }
+}
+
+impl Mul<Tuple> for Tuple {
+    type Output = f32;
+
+    fn mul(self, factor: Tuple) -> Self::Output {
+        0.0
     }
 }
 
@@ -208,5 +228,15 @@ mod tests {
 
         let vector = Tuple::vector(-1.0, -2.0, -3.0);
         assert_eq!(vector.magnitude(), 14.0_f32.sqrt());
+    }
+
+    #[test]
+    fn norm() {
+        let vector = Tuple::vector(4.0, 0.0, 0.0);
+        assert_eq!(vector.norm(), Tuple::vector(1.0, 0.0, 0.0));
+
+        let vector = Tuple::vector(1.0, 2.0, 3.0);
+        assert_eq!(vector.norm(), Tuple::vector(0.26726, 0.53452, 0.80178));
+        assert!(eq(vector.norm().magnitude(), 1.0));
     }
 }
