@@ -5,14 +5,14 @@ const PPM_MAGIC: &str = "P3";
 const PPM_MAX_COLOUR: f32 = 255.0;
 
 #[derive(Debug, Clone)]
-struct Canvas {
+pub struct Canvas {
     canvas: Vec<Colour>,
-    width: usize,
-    height: usize,
+    pub width: usize,
+    pub height: usize,
 }
 
 impl Canvas {
-    fn new(width: usize, height: usize) -> Self {
+    pub fn new(width: usize, height: usize) -> Self {
         Self {
             canvas: vec![Colour::new(0.0, 0.0, 0.0); width * height],
             width,
@@ -20,7 +20,7 @@ impl Canvas {
         }
     }
 
-    fn to_ppm(&self) -> String {
+    pub fn to_ppm(&self) -> String {
         let mut data = String::new();
         data += format!("{PPM_MAGIC}\n{} {}\n{}", self.width.to_string(), self.height.to_string(), PPM_MAX_COLOUR.to_string()).as_str();
         
@@ -37,7 +37,7 @@ impl Canvas {
         let mut new_data = String::new();
         let mut line_len = 0;
         for char in data.chars() {
-            print!("{}", char);
+            //print!("{}", char);
             line_len += 1;
             if char == ' ' && line_len >= 66 {
                 new_data += " \n";
