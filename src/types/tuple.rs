@@ -1,18 +1,18 @@
-use std::ops::{Mul, Div};
+use std::ops::{Mul, Div, MulAssign, DivAssign};
 
-use derive_more::{Add, Sub, Neg};
+use derive_more::{Add, Sub, Neg, AddAssign, SubAssign};
 use super::eq;
 
-#[derive(Debug, Clone, Copy, Add, Sub, Neg)]
-struct Tuple {
-    x: f32,
-    y: f32,
-    z: f32,
-    w: f32,
+#[derive(Debug, Clone, Copy, Add, Sub, Neg, AddAssign, SubAssign)]
+pub struct Tuple {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub w: f32,
 }
 
 impl Tuple {
-    fn new(x: f32, y: f32, z: f32, w: f32) -> Self {
+    pub fn new(x: f32, y: f32, z: f32, w: f32) -> Self {
         Self {
             x,
             y,
@@ -21,7 +21,7 @@ impl Tuple {
         }
     }
 
-    fn vector(x: f32, y: f32, z: f32) -> Self {
+    pub fn vector(x: f32, y: f32, z: f32) -> Self {
         Self {
             x,
             y,
@@ -30,7 +30,7 @@ impl Tuple {
         }
     }
 
-    fn point(x: f32, y: f32, z: f32) -> Self {
+    pub fn point(x: f32, y: f32, z: f32) -> Self {
         Self {
             x,
             y,
@@ -39,31 +39,31 @@ impl Tuple {
         }
     }
 
-    fn is_vector(&self) -> bool {
+    pub fn is_vector(&self) -> bool {
         return self.w == 0.0;
     }
 
-    fn is_point(&self) -> bool {
+    pub fn is_point(&self) -> bool {
         return self.w == 1.0;
     }
 
-    fn magnitude(&self) -> f32 {
+    pub fn magnitude(&self) -> f32 {
         (self.x.powi(2) + self.y.powi(2) + self.z.powi(2) + self.w.powi(2)).sqrt()
     }
 
-    fn norm(&self) -> Self {
+    pub fn norm(&self) -> Self {
         *self / self.magnitude()
     }
 
-    fn mul_scalar(&self, factor: f32) -> Self {
+    pub fn mul_scalar(&self, factor: f32) -> Self {
         *self * factor
     }
 
-    fn dot(&self, other: Self) -> f32 {
+    pub fn dot(&self, other: Self) -> f32 {
         *self * other
     }
 
-    fn cross(&self, other: Self) -> Self {
+    pub fn cross(&self, other: Self) -> Self {
         Self::vector(
             self.y * other.z - self.z * other.y,
             self.z * other.x - self.x * other.z,
