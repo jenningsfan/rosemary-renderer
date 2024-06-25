@@ -1,7 +1,8 @@
 use std::{fs::File, io::Write};
-use rosemary_renderer::{tick, types::{canvas::Canvas, colour::Colour}, Enviroment, Projectile, Tuple};
+use rosemary_renderer::{tick, types::{canvas::Canvas, colour::Colour}, Enviroment, Projectile, Tuple, Matrix};
 
 fn main() {
+    // projectile fun things
     let mut proj = Projectile::new(
         Tuple::point(0.0, 1.0, 0.0),
         Tuple::vector(1.0, 2.0, 0.0).norm() * 11.0
@@ -25,5 +26,24 @@ fn main() {
     }
 
     let mut file = File::create("images/proj.ppm").unwrap();
-    write!(file, "{}", canvas.to_ppm());
+    write!(file, "{}", canvas.to_ppm()).unwrap();
+
+    // matrix fun things
+    let identity = Matrix::identity(4);
+    dbg!(identity.inverse());
+
+    let mat = Matrix::new_4x4([
+        8.0, -5.0, 9.0, 2.0,
+        7.0, 5.0, 6.0, 1.0,
+        -6.0, 0.0, 9.0, 6.0,
+        -3.0, 0.0, -9.0, -4.0
+    ]);
+    dbg!(mat * mat.inverse().unwrap());
+    dbg!(mat.transpose().inverse());
+    dbg!(mat.inverse().unwrap().transpose());
+
+    let mut identity = Matrix::identity(4);
+    identity[(2, 0)] = 2.0;
+    let tup = Tuple::new(1.0, 2.0, 3.0, 4.0);
+    dbg!(identity * tup);
 }

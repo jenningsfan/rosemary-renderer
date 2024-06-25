@@ -1,5 +1,6 @@
 pub mod types;
 pub use types::tuple::Tuple;
+pub use types::matrix::Matrix;
 
 const EPSILON: f32 = 0.00001;
 
