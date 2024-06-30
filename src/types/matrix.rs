@@ -1,6 +1,13 @@
 use core::panic;
 use std::ops::{Index, IndexMut, Mul};
+use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, SQRT_2};
 use crate::{eq, Tuple};
+
+pub enum Axis {
+    X,
+    Y,
+    Z
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct Matrix {
@@ -41,19 +48,6 @@ impl Matrix {
             values: [0.0; 16],
             size
         }
-    }
-
-    pub fn identity(size: usize) -> Self {
-        if size != 4 {
-            panic!("Only 4x4 identity matrices supported");
-        }
-
-        Self::new_4x4([
-            1.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            0.0, 0.0, 0.0, 1.0
-        ])
     }
 
     pub fn transpose(&self) -> Self {
@@ -126,6 +120,109 @@ impl Matrix {
         }
         Some(result)
     }
+
+    pub fn identity(size: usize) -> Self {
+        if size != 4 {
+            panic!("Only 4x4 identity matrices supported");
+        }
+
+        Self::new_4x4([
+            1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0
+        ])
+    }
+
+    pub fn translation(x: f32, y: f32, z: f32) -> Self {
+        Self::new_4x4([
+            1.0, 0.0, 0.0, x,
+            0.0, 1.0, 0.0, y,
+            0.0, 0.0, 1.0, z,
+            0.0, 0.0, 0.0, 1.0,
+        ])
+    }
+
+    pub fn translate(&self, x: f32, y: f32, z: f32) -> Self {
+        Self::translation(x, y, z) * *self
+    }
+
+    pub fn scaling(x: f32, y: f32, z: f32) -> Self {
+        Self::new_4x4([
+            x, 0.0, 0.0, 0.0,
+            0.0, y, 0.0, 0.0,
+            0.0, 0.0, z, 0.0,
+            0.0, 0.0, 0.0, 1.0,
+        ])
+    }
+
+    pub fn scale(&self, x: f32, y: f32, z: f32) -> Self {
+        Self::scaling(x, y, z) * *self
+    }
+
+    pub fn rotation_x(ang: f32) -> Self {
+        Self::new_4x4([
+            1.0, 0.0,       0.0,        0.0,
+            0.0, ang.cos(), -ang.sin(), 0.0,
+            0.0, ang.sin(), ang.cos(),  0.0,
+            0.0, 0.0,       0.0,        1.0
+        ])    
+    }
+
+    pub fn rotation_y(ang: f32) -> Self {
+        Self::new_4x4([
+            ang.cos(),  0.0, ang.sin(), 0.0,
+            0.0,        1.0, 0.0,       0.0,
+            -ang.sin(), 0.0, ang.cos(), 0.0,
+            0.0,        0.0, 0.0,       1.0
+        ])
+    }
+
+    pub fn rotation_z(ang: f32) -> Self {
+        Self::new_4x4([
+            ang.cos(), -ang.sin(), 0.0, 0.0,
+            ang.sin(), ang.cos(),  0.0, 0.0,
+            0.0,       0.0,        1.0, 0.0,
+            0.0,       0.0,        0.0, 1.0
+        ])
+    }
+
+    pub fn rotation(axis: Axis, ang: f32) -> Self {
+        match axis {
+            Axis::X => Self::rotation_x(ang),
+            Axis::Y => Self::rotation_y(ang),
+            Axis::Z => Self::rotation_z(ang),
+        }
+    }
+
+    pub fn rotate_x(&self, ang: f32) -> Self {
+        Self::rotation_x(ang) * *self
+    }
+
+    pub fn rotate_y(&self, ang: f32) -> Self {
+        Self::rotation_y(ang) * *self
+    }
+
+    pub fn rotate_z(&self, ang: f32) -> Self {
+        Self::rotation_z(ang) * *self
+    }
+
+    pub fn rotate(&self, axis: Axis, ang: f32) -> Self {
+        Self::rotation(axis, ang) * *self
+    }
+
+    pub fn shearing(xy: f32, xz: f32, yx: f32, yz: f32, zx: f32, zy: f32) -> Self {
+        Self::new_4x4([
+            1.0, xy, xz, 0.0,
+            yx, 1.0, yz, 0.0,
+            zx, zy, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0
+        ])
+    }
+
+    pub fn shear(&self, xy: f32, xz: f32, yx: f32, yz: f32, zx: f32, zy: f32) -> Self {
+        Self::shearing(xy, xz, yx, yz, zx, zy) * *self
+    }
 }
 
 impl PartialEq for Matrix {
@@ -194,9 +291,9 @@ impl IndexMut<(usize, usize)> for Matrix {
 
 #[cfg(test)]
 mod tests {
+    use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, SQRT_2};
     use crate::Tuple;
-
-    use super::Matrix;
+    use super::{Matrix, Axis};
 
     #[test]
     fn new() {
@@ -540,5 +637,121 @@ mod tests {
         ]);
         let mat3 = mat1 * mat2;
         assert_eq!(mat3 * mat2.inverse().unwrap(), mat1);
+    }
+
+    #[test]
+    fn combined_tranform() {
+        let p = Tuple::point(1.0, 0.0, 1.0);
+        let rot = Matrix::rotation_x(FRAC_PI_2);
+        let scale = Matrix::scaling(5.0, 5.0, 5.0);
+        let translation  = Matrix::translation(10.0, 5.0, 7.0);
+
+        let p2 = rot * p;
+        let p3 = scale * p2;
+        let p4 = translation * p3;
+
+        assert_eq!(p2, Tuple::point(1.0, -1.0, 0.0));
+        assert_eq!(p3, Tuple::point(5.0, -5.0, 0.0));
+        assert_eq!(p4, Tuple::point(15.0, 0.0, 7.0));
+
+        let transformation = translation * scale * rot;
+        assert_eq!(transformation * p, Tuple::point(15.0, 0.0, 7.0));
+
+        let transformation = Matrix::identity(4)
+            .rotate_x(FRAC_PI_2)
+            .scale(5.0, 5.0, 5.0)
+            .translate(10.0, 5.0, 7.0);
+        assert_eq!(transformation * p, Tuple::point(15.0, 0.0, 7.0));
+    }
+
+    #[test]
+    fn translate() {
+        let transform = Matrix::translation(5.0, -3.0, 2.0);
+        let p = Tuple::point(-3.0, 4.0, 5.0);
+        assert_eq!(transform * p, Tuple::point(2.0, 1.0, 7.0));
+
+        let transform = Matrix::translation(5.0, -3.0, 2.0).inverse().unwrap();
+        let p = Tuple::point(-3.0, 4.0, 5.0);
+        assert_eq!(transform * p, Tuple::point(-8.0, 7.0, 3.0));
+
+        let transform = Matrix::translation(5.0, -3.0, 2.0);
+        let v = Tuple::vector(-3.0, 4.0, 5.0);
+        assert_eq!(transform * v, Tuple::vector(-3.0, 4.0, 5.0));
+    }
+
+    #[test]
+    fn scale() {
+        let transform = Matrix::scaling(2.0, 3.0, 4.0);
+        let p = Tuple::point(-4.0, 6.0, 8.0);
+        assert_eq!(transform * p, Tuple::point(-8.0, 18.0, 32.0));
+        
+        let transform = Matrix::scaling(2.0, 3.0, 4.0);
+        let p = Tuple::vector(-4.0, 6.0, 8.0);
+        assert_eq!(transform * p, Tuple::vector(-8.0, 18.0, 32.0));
+
+        let transform = Matrix::scaling(2.0, 3.0, 4.0).inverse().unwrap();
+        let p = Tuple::vector(-4.0, 6.0, 8.0);
+        assert_eq!(transform * p, Tuple::vector(-2.0, 2.0, 2.0));
+
+        let transform = Matrix::scaling(-1.0, 1.0, 1.0).inverse().unwrap();
+        let p = Tuple::vector(2.0, 3.0, 4.0);
+        assert_eq!(transform * p, Tuple::vector(-2.0, 3.0, 4.0));
+    }
+
+    #[test]
+    fn rotate() {
+        let half_quarter = Matrix::rotation_x(FRAC_PI_4);
+        let full_quarter = Matrix::rotation_x(FRAC_PI_2);
+        let p = Tuple::point(0.0, 1.0, 0.0);
+        assert_eq!(half_quarter * p, Tuple::point(0.0, SQRT_2 / 2.0, SQRT_2 / 2.0));
+        assert_eq!(full_quarter * p, Tuple::point(0.0, 0.0, 1.0));
+        assert_eq!(half_quarter.inverse().unwrap() * p, Tuple::point(0.0, SQRT_2 / 2.0, -SQRT_2 / 2.0));
+
+        let full_quarter = Matrix::rotation(Axis::X, FRAC_PI_2);
+        assert_eq!(full_quarter * p, Tuple::point(0.0, 0.0, 1.0));
+
+        let half_quarter = Matrix::rotation_y(FRAC_PI_4);
+        let full_quarter = Matrix::rotation_y(FRAC_PI_2);
+        let p = Tuple::point(0.0, 0.0, 1.0);
+        assert_eq!(half_quarter * p, Tuple::point(SQRT_2 / 2.0, 0.0, SQRT_2 / 2.0));
+        assert_eq!(full_quarter * p, Tuple::point(1.0, 0.0, 0.0));
+
+        let full_quarter = Matrix::rotation(Axis::Y, FRAC_PI_2);
+        assert_eq!(full_quarter * p, Tuple::point(1.0, 0.0, 0.0));
+
+        let half_quarter = Matrix::rotation_z(FRAC_PI_4);
+        let full_quarter = Matrix::rotation_z(FRAC_PI_2);
+        let p = Tuple::point(0.0, 1.0, 0.0);
+        assert_eq!(half_quarter * p, Tuple::point(-SQRT_2 / 2.0, SQRT_2 / 2.0, 0.0));
+        assert_eq!(full_quarter * p, Tuple::point(-1.0, 0.0, 0.0));
+
+        let full_quarter = Matrix::rotation(Axis::Z, FRAC_PI_2);
+        assert_eq!(full_quarter * p, Tuple::point(-1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn shear() {
+        let point = Tuple::point(2.0, 3.0, 4.0);
+
+        let shear = Matrix::shearing(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        assert_eq!(shear * point, Tuple::point(5.0, 3.0, 4.0));
+
+        let shear = Matrix::shearing(0.0, 1.0, 0.0, 0.0, 0.0, 0.0);
+        assert_eq!(shear * point, Tuple::point(6.0, 3.0, 4.0));
+
+        let shear = Matrix::shearing(0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
+        assert_eq!(shear * point, Tuple::point(2.0, 5.0, 4.0));
+
+        let shear = Matrix::shearing(0.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+        assert_eq!(shear * point, Tuple::point(2.0, 7.0, 4.0));
+
+        let shear = Matrix::shearing(0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+        assert_eq!(shear * point, Tuple::point(2.0, 3.0, 6.0));
+
+        let shear = Matrix::shearing(0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+        assert_eq!(shear * point, Tuple::point(2.0, 3.0, 7.0));
+
+        let shear = Matrix::shearing(2.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+        assert_eq!(shear * point, Tuple::point(8.0, 3.0, 7.0));
     }
 }

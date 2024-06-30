@@ -1,3 +1,4 @@
+use crate::Matrix;
 use std::ops::{Mul, Div, MulAssign, DivAssign};
 
 use derive_more::{Add, Sub, Neg, AddAssign, SubAssign};
@@ -102,6 +103,14 @@ impl Mul<Tuple> for Tuple {
         self.y * other.y +
         self.z * other.z +
         self.w * other.w
+    }
+}
+
+impl Mul<Matrix> for Tuple {
+    type Output = Tuple;
+
+    fn mul(self, other: Matrix) -> Self::Output {
+        other * self
     }
 }
 
