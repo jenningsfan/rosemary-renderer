@@ -1,4 +1,4 @@
-use crate::Tuple;
+use crate::{Matrix, Tuple};
 
 pub struct Ray {
     pub origin: Tuple,
@@ -19,11 +19,18 @@ impl Ray {
     pub fn position(&self, distance: f32) -> Tuple {
         self.origin + self.direction * distance
     }
+
+    pub fn transform(&self, transformation: Matrix) -> Self {
+        Self {
+            origin: self.origin * transformation,
+            direction: self.direction * transformation,
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::Tuple;
+    use crate::{Matrix, Tuple};
     use super::Ray;
 
     #[test]
@@ -43,5 +50,20 @@ mod tests {
         assert_eq!(ray.position(1.0), Tuple::point(3.0, 3.0, 4.0));
         assert_eq!(ray.position(-1.0), Tuple::point(1.0, 3.0, 4.0));
         assert_eq!(ray.position(2.5), Tuple::point(4.5, 3.0, 4.0));
+    }
+
+    #[test]
+    fn transform() {
+        let ray = Ray::new(Tuple::point(1.0, 2.0, 3.0),
+            Tuple::vector(0.0, 1.0, 0.0));
+        let transformed = ray.transform(Matrix::translation(3.0, 4.0, 5.0));
+        assert_eq!(transformed.origin, Tuple::point(4.0, 6.0, 8.0));
+        assert_eq!(transformed.direction, Tuple::vector(0.0, 1.0, 0.0));
+
+        let ray = Ray::new(Tuple::point(1.0, 2.0, 3.0),
+            Tuple::vector(0.0, 1.0, 0.0));
+        let transformed = ray.transform(Matrix::scaling(2.0, 3.0, 4.0));
+        assert_eq!(transformed.origin, Tuple::point(2.0, 6.0, 12.0));
+        assert_eq!(transformed.direction, Tuple::vector(0.0, 3.0, 0.0));
     }
 }
