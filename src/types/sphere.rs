@@ -34,10 +34,21 @@ impl Sphere {
 
         vec![Intersection::new(t1, *self), Intersection::new(t2, *self)]
     }
+
+    pub fn normal(&self, point: Tuple) -> Tuple {
+        assert!(point.is_point());
+        let point = self.transform.inverse().unwrap() * point;
+        let mut normal = point - Tuple::point(0.0, 0.0, 0.0);
+        normal *= self.transform.inverse().unwrap().transpose();
+        normal.w = 0.0;
+        normal.norm()
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::f32::consts::{PI, SQRT_2};
+
     use super::Sphere;
     use crate::{Matrix, Tuple};
     use crate::types::ray::Ray;
@@ -98,5 +109,29 @@ mod tests {
         s.transform = Matrix::translation(5.0, 0.0, 0.0);
         let inters = s.intersect(r);
         assert_eq!(inters.len(), 0);
+    }
+
+    #[test]
+    fn normal() {
+        let s = Sphere::new();
+        assert_eq!(s.normal(Tuple::point(1.0, 0.0, 0.0)), Tuple::vector(1.0, 0.0, 0.0));
+        assert_eq!(s.normal(Tuple::point(0.0, 1.0, 0.0)), Tuple::vector(0.0, 1.0, 0.0));
+        assert_eq!(s.normal(Tuple::point(0.0, 0.0, 1.0)), Tuple::vector(0.0, 0.0, 1.0));
+
+        let root_3_over_3 = 3.0_f32.sqrt() / 3.0;
+        assert_eq!(s.normal(Tuple::point(root_3_over_3, root_3_over_3, root_3_over_3)),
+            Tuple::vector(root_3_over_3, root_3_over_3, root_3_over_3));
+
+        let n = s.normal(Tuple::point(root_3_over_3, root_3_over_3, root_3_over_3));
+        assert_eq!(n, n.norm());
+
+        let mut s = Sphere::new();
+        s.transform = Matrix::translation(0.0, 1.0, 0.0);
+        assert_eq!(s.normal(Tuple::point(0.0, 1.70711, -0.70711)), Tuple::vector(0.0, 0.70711, -0.70711));
+
+        let mut s = Sphere::new();
+        s.transform = Matrix::rotation_z(PI / 5.0).scale(1.0, 0.5, 1.0);
+        assert_eq!(s.normal(Tuple::point(0.0, SQRT_2 / 2.0, -SQRT_2 / 2.0)), Tuple::vector(0.0, 0.97014, -0.24254));
+
     }
 }

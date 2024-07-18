@@ -1,5 +1,8 @@
 use std::{fs::File, io::Write};
 use std::f32::consts::PI;
+use rosemary_renderer::types::ray::Ray;
+use rosemary_renderer::types::sphere::Sphere;
+use rosemary_renderer::types::intersection::hit;
 use rosemary_renderer::{tick, types::{canvas::Canvas, colour::Colour}, Enviroment, Projectile, Tuple, Matrix};
 
 fn projectile_fun() {
@@ -62,7 +65,7 @@ fn clock_fun() {
         let x = point.x as usize;
         let y = point.y as usize;
         if x < canvas.width && y < canvas.height {
-            canvas[(x, y)] = Colour::new(1.0, 0.0, 0.0)
+            canvas[(x, y)] = Colour::new(1.0, 0.0, 0.0);
         }
     }
 
@@ -70,8 +73,40 @@ fn clock_fun() {
     write!(file, "{}", canvas.to_ppm()).unwrap();
 }
 
+fn sphere_fun() {
+    let size = 100;
+    let half = (size / 2) as f32;
+    let mut canvas = Canvas::new(size, size);
+    let mut sphere = Sphere::new();
+    //sphere.transform = Matrix::scaling(2.0, 2.0, 2.0);
+    let red = Colour::new(1.0, 0.0, 0.0);
+    let ray_direction = Tuple::vector(0.0, 0.0, 1.0);
+    let ray_origin = Tuple::point(0.0, 0.0, -5.0);
+    let wall_z = 10.0;
+    let wall_size = 7.0;
+    let half = wall_size / 2.0;
+    let pixel_size = wall_size / size as f32;
+
+    for y in 0..canvas.height {
+        let world_y = half - pixel_size * y as f32;
+        for x in 0..canvas.width {
+            let world_x = -half + pixel_size * x as f32;
+            let position = Tuple::point(world_x, world_y, wall_z);
+
+            let ray = Ray::new(ray_origin, (position - ray_origin).norm());
+            if hit(sphere.intersect(ray)).is_some() {
+                canvas[(x, y)] = red;
+            }
+        }
+    }
+
+    let mut file = File::create("images/sphere.ppm").unwrap();
+    write!(file, "{}", canvas.to_ppm()).unwrap();
+}
+
 fn main() {
-    projectile_fun();
-    matrix_fun();
-    clock_fun();
+    // projectile_fun();
+    // matrix_fun();
+    // clock_fun();
+    sphere_fun();
 }

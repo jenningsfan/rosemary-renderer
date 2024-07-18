@@ -1,10 +1,10 @@
 use crate::Matrix;
 use std::ops::{Mul, Div, MulAssign, DivAssign};
 
-use derive_more::{Add, Sub, Neg, AddAssign, SubAssign};
+use derive_more::{Add, Sub, Neg, AddAssign, SubAssign, MulAssign};
 use super::eq;
 
-#[derive(Debug, Clone, Copy, Add, Sub, Neg, AddAssign, SubAssign)]
+#[derive(Debug, Clone, Copy, Add, Sub, Neg, AddAssign, SubAssign, MulAssign)]
 pub struct Tuple {
     pub x: f32,
     pub y: f32,
@@ -111,6 +111,12 @@ impl Mul<Matrix> for Tuple {
 
     fn mul(self, other: Matrix) -> Self::Output {
         other * self
+    }
+}
+
+impl MulAssign<Matrix> for Tuple {
+    fn mul_assign(&mut self, rhs: Matrix) {
+        *self = *self * rhs;
     }
 }
 
