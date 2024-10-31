@@ -71,6 +71,13 @@ impl Tuple {
             self.x * other.y - self.y * other.x,
         )
     }
+
+    pub fn reflect(&self, normal: Self) -> Self {
+        assert!(self.is_vector());
+        assert!(normal.is_vector());
+
+        *self - normal * 2.0 * self.dot(normal)
+    }
 }
 
 impl PartialEq for Tuple {
@@ -135,6 +142,8 @@ impl Div<f32> for Tuple {
 
 #[cfg(test)]
 mod tests {
+    use std::f32::consts::SQRT_2;
+
     use super::*;
 
     #[test]
@@ -279,5 +288,18 @@ mod tests {
         let vector2 = Tuple::vector(2.0, 3.0, 4.0);
         assert_eq!(vector1.cross(vector2), Tuple::vector(-1.0, 2.0, -1.0));
         assert_eq!(vector2.cross(vector1), Tuple::vector(1.0, -2.0, 1.0));
+    }
+
+    #[test]
+    fn reflect() {
+        // vector approaching norm at 45 degree angle
+        let v1 = Tuple::vector(1.0, -1.0, 0.0);
+        let n1 = Tuple::vector(0.0, -1.0, 0.0);
+        assert_eq!(v1.reflect(n1), Tuple::vector(1.0, 1.0, 0.0));
+
+        // reflecting vector off slanted surface
+        let v1 = Tuple::vector(0.0, -1.0, 0.0);
+        let n1 = Tuple::vector(SQRT_2 / 2.0, SQRT_2 / 2.0, 0.0);
+        assert_eq!(v1.reflect(n1), Tuple::vector(1.0, 0.0, 0.0));
     }
 }
