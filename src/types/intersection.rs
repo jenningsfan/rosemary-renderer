@@ -36,7 +36,7 @@ mod tests {
 
     #[test]
     fn new() {
-        let s = Sphere::new();
+        let s = Sphere::default();
         let i = Intersection::new(3.5, s);
         assert_eq!(i.t, 3.5);
         assert_eq!(i.obj, s);

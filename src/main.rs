@@ -1,5 +1,7 @@
 use std::{fs::File, io::Write};
 use std::f32::consts::PI;
+use rosemary_renderer::types::light::PointLight;
+use rosemary_renderer::types::material::Material;
 use rosemary_renderer::types::ray::Ray;
 use rosemary_renderer::types::sphere::Sphere;
 use rosemary_renderer::types::intersection::hit;
@@ -74,10 +76,18 @@ fn clock_fun() {
 }
 
 fn sphere_fun() {
-    let size = 100;
+    let size = 400;
     let half = (size / 2) as f32;
     let mut canvas = Canvas::new(size, size);
-    let mut sphere = Sphere::new();
+
+    let mut sphere = Sphere::default();
+    sphere.material = Material::default();
+    sphere.material.colour = Colour::new(1.0, 0.2, 0.8);
+
+    sphere.transform = Matrix::shearing(1.0, 0.0, 0.0, 1.0, 0.0, 0.0).scale(0.5, 1.0, 1.0);
+
+    let light = PointLight::new(Colour::white(), Tuple::point(-10.0, -10.0, -10.0));
+
     //sphere.transform = Matrix::scaling(2.0, 2.0, 2.0);
     let red = Colour::new(1.0, 0.0, 0.0);
     let ray_direction = Tuple::vector(0.0, 0.0, 1.0);
@@ -94,8 +104,13 @@ fn sphere_fun() {
             let position = Tuple::point(world_x, world_y, wall_z);
 
             let ray = Ray::new(ray_origin, (position - ray_origin).norm());
-            if hit(sphere.intersect(ray)).is_some() {
-                canvas[(x, y)] = red;
+            if let Some(hit) = hit(sphere.intersect(ray)) {
+                let hit_point = ray.position(hit.t);
+                let hit_norm = hit.obj.normal(hit_point);
+                let eye = -ray.direction;
+                let col = hit.obj.material.lighting(hit_point, light, eye, hit_norm);
+
+                canvas[(x, y)] = col;
             }
         }
     }

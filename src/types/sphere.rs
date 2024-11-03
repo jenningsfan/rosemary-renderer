@@ -1,18 +1,20 @@
 use uuid::Uuid;
 
-use crate::{types::ray::Ray, Tuple, types::intersection::Intersection, Matrix};
+use crate::{types::ray::Ray, Tuple, types::intersection::Intersection, Matrix, types::material::Material};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Sphere {
     id: Uuid,
     pub transform: Matrix,
+    pub material: Material,
 }
 
 impl Sphere {
-    pub fn new() -> Self {
+    pub fn new(transform: Matrix, material: Material) -> Self {
         Self {
             id: Uuid::new_v4(),
-            transform: Matrix::identity(4),
+            transform,
+            material,
         }
     }
 
@@ -45,24 +47,36 @@ impl Sphere {
     }
 }
 
+impl Default for Sphere {
+    fn default() -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            transform: Matrix::identity(4),
+            material: Material::default(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::f32::consts::{PI, SQRT_2};
 
     use super::Sphere;
+    use crate::types::material::Material;
     use crate::{Matrix, Tuple};
     use crate::types::ray::Ray;
 
     #[test]
     fn new() {
-        let s = Sphere::new();
+        let s = Sphere::default();
         assert_eq!(s.transform, Matrix::identity(4));
+        assert_eq!(s.material, Material::default());
     }
 
     #[test]
     fn intersect() {
         let r = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
-        let s = Sphere::new();
+        let s = Sphere::default();
         let inters = s.intersect(r);
         assert_eq!(inters[0].t, 4.0);
         assert_eq!(inters[1].t, 6.0);
@@ -70,34 +84,33 @@ mod tests {
         assert_eq!(inters[1].obj, s);
 
         let r = Ray::new(Tuple::point(0.0, 1.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
-        let s = Sphere::new();
+        let s = Sphere::default();
         let inters = s.intersect(r);
         assert_eq!(inters.len(), 2);
         assert_eq!(inters[0].t, 5.0);
         assert_eq!(inters[1].t, 5.0);
 
         let r = Ray::new(Tuple::point(0.0, 2.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
-        let s = Sphere::new();
+        let s = Sphere::default();
         let inters = s.intersect(r);
         assert_eq!(inters.len(), 0);
 
         let r = Ray::new(Tuple::point(0.0, 0.0, 0.0), Tuple::vector(0.0, 0.0, 1.0));
-        let s = Sphere::new();
+        let s = Sphere::default();
         let inters = s.intersect(r);
         assert_eq!(inters.len(), 2);
         assert_eq!(inters[0].t, -1.0);
         assert_eq!(inters[1].t, 1.0);
 
         let r = Ray::new(Tuple::point(0.0, 0.0, 5.0), Tuple::vector(0.0, 0.0, 1.0));
-        let s = Sphere::new();
+        let s = Sphere::default();
         let inters = s.intersect(r);
         assert_eq!(inters.len(), 2);
         assert_eq!(inters[0].t, -6.0);
         assert_eq!(inters[1].t, -4.0);
 
         let r = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
-        let mut s = Sphere::new();
-        s.transform = Matrix::scaling(2.0, 2.0, 2.0);
+        let mut s = Sphere::new(Matrix::scaling(2.0, 2.0, 2.0), Material::default());
         let inters = s.intersect(r);
         dbg!(&inters);
         assert_eq!(inters.len(), 2);
@@ -105,15 +118,14 @@ mod tests {
         assert_eq!(inters[1].t, 7.0);
 
         let r = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
-        let mut s = Sphere::new();
-        s.transform = Matrix::translation(5.0, 0.0, 0.0);
+        let mut s = Sphere::new(Matrix::translation(5.0, 0.0, 0.0), Material::default());
         let inters = s.intersect(r);
         assert_eq!(inters.len(), 0);
     }
 
     #[test]
     fn normal() {
-        let s = Sphere::new();
+        let s = Sphere::default();
         assert_eq!(s.normal(Tuple::point(1.0, 0.0, 0.0)), Tuple::vector(1.0, 0.0, 0.0));
         assert_eq!(s.normal(Tuple::point(0.0, 1.0, 0.0)), Tuple::vector(0.0, 1.0, 0.0));
         assert_eq!(s.normal(Tuple::point(0.0, 0.0, 1.0)), Tuple::vector(0.0, 0.0, 1.0));
@@ -125,13 +137,10 @@ mod tests {
         let n = s.normal(Tuple::point(root_3_over_3, root_3_over_3, root_3_over_3));
         assert_eq!(n, n.norm());
 
-        let mut s = Sphere::new();
-        s.transform = Matrix::translation(0.0, 1.0, 0.0);
+        let s = Sphere::new(Matrix::translation(0.0, 1.0, 0.0), Material::default());
         assert_eq!(s.normal(Tuple::point(0.0, 1.70711, -0.70711)), Tuple::vector(0.0, 0.70711, -0.70711));
 
-        let mut s = Sphere::new();
-        s.transform = Matrix::rotation_z(PI / 5.0).scale(1.0, 0.5, 1.0);
+        let s = Sphere::new(Matrix::rotation_z(PI / 5.0).scale(1.0, 0.5, 1.0), Material::default());
         assert_eq!(s.normal(Tuple::point(0.0, SQRT_2 / 2.0, -SQRT_2 / 2.0)), Tuple::vector(0.0, 0.97014, -0.24254));
-
     }
 }
