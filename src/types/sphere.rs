@@ -5,8 +5,9 @@ use crate::{types::ray::Ray, Tuple, types::intersection::Intersection, Matrix, t
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Sphere {
     id: Uuid,
-    pub transform: Matrix,
+    transform: Matrix,
     pub material: Material,
+    transform_inverse: Matrix,
 }
 
 impl Sphere {
@@ -15,11 +16,17 @@ impl Sphere {
             id: Uuid::new_v4(),
             transform,
             material,
+            transform_inverse: transform.inverse().unwrap(),
         }
     }
 
+    pub fn set_transform(&mut self, transform: Matrix) {
+        self.transform = transform;
+        self.transform_inverse = transform.inverse().unwrap();
+    }
+
     pub fn intersect(&self, ray: Ray) -> Vec<Intersection> {
-        let ray = ray.transform(self.transform.inverse().unwrap());
+        let ray = ray.transform(self.transform_inverse);
 
         let sphere_ray_vec = ray.origin - Tuple::point(0.0, 0.0, 0.0);
         let a = ray.direction.dot(ray.direction);
@@ -39,9 +46,9 @@ impl Sphere {
 
     pub fn normal(&self, point: Tuple) -> Tuple {
         assert!(point.is_point());
-        let point = self.transform.inverse().unwrap() * point;
+        let point = self.transform_inverse * point;
         let mut normal = point - Tuple::point(0.0, 0.0, 0.0);
-        normal *= self.transform.inverse().unwrap().transpose();
+        normal *= self.transform_inverse.transpose();
         normal.w = 0.0;
         normal.norm()
     }
@@ -49,11 +56,7 @@ impl Sphere {
 
 impl Default for Sphere {
     fn default() -> Self {
-        Self {
-            id: Uuid::new_v4(),
-            transform: Matrix::identity(4),
-            material: Material::default(),
-        }
+        Self::new(Matrix::identity(4), Material::default())
     }
 }
 

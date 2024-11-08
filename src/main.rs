@@ -76,15 +76,14 @@ fn clock_fun() {
 }
 
 fn sphere_fun() {
-    let size = 400;
+    let size = 1000;
     let half = (size / 2) as f32;
     let mut canvas = Canvas::new(size, size);
 
     let mut sphere = Sphere::default();
     sphere.material = Material::default();
     sphere.material.colour = Colour::new(1.0, 0.2, 0.8);
-
-    sphere.transform = Matrix::shearing(1.0, 0.0, 0.0, 1.0, 0.0, 0.0).scale(0.5, 1.0, 1.0);
+    //sphere.set_transform(Matrix::shearing(1.0, 0.0, 0.0, 1.0, 0.0, 0.0).scale(0.5, 1.0, 1.0));
 
     let light = PointLight::new(Colour::white(), Tuple::point(-10.0, -10.0, -10.0));
 

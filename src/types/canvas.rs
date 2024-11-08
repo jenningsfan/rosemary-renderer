@@ -2,7 +2,8 @@ use std::ops::{Index, IndexMut};
 use super::colour::Colour;
 
 const PPM_MAGIC: &str = "P3";
-const PPM_MAX_COLOUR: f32 = 255.0;
+const PPM_COLOUR_MULTIPLIER: f32 = 256.0;
+const PPM_MAX_COLOUR: f32 = PPM_COLOUR_MULTIPLIER - 1.0;
 
 #[derive(Debug, Clone)]
 pub struct Canvas {
@@ -21,42 +22,37 @@ impl Canvas {
     }
 
     pub fn to_ppm(&self) -> String {
-        let mut data = String::new();
-        data += format!("{PPM_MAGIC}\n{} {}\n{}", self.width.to_string(), self.height.to_string(), PPM_MAX_COLOUR.to_string()).as_str();
+        let mut data = String::with_capacity(self.canvas.len() * 5);
+        data += &format!("{PPM_MAGIC}\n{} {}\n{}", self.width, self.height, PPM_MAX_COLOUR);
         
+        let mut line_len = 0;
         for (i, pixel) in self.canvas.iter().enumerate() {
             if i % self.width == 0 {
                 data += "\n";
-            }
-
-            data += format!("{} {} {} ", Self::convert_colour(pixel.r),
-                Self::convert_colour(pixel.g), Self::convert_colour(pixel.b)).as_str();
-
-        }
-        
-        let mut new_data = String::new();
-        let mut line_len = 0;
-        for char in data.chars() {
-            //print!("{}", char);
-            line_len += 1;
-            if char == ' ' && line_len >= 66 {
-                new_data += " \n";
-                line_len = 0;
-                continue;
-            }
-            if char == '\n' {
                 line_len = 0;
             }
-            new_data += char.to_string().as_str();
+
+            let cols = [pixel.r, pixel.g, pixel.b];
+            for col in cols {
+                let col = Self::convert_colour(col) + " ";
+                line_len += col.len();
+                
+                if line_len  >= 70 {
+                    data += "\n";
+                    line_len = col.len();
+                }
+                data += &col;
+            }
         }
 
-        new_data += "\n"; // terminator
+        data += "\n"; // terminator
 
-        new_data
+        data
     }
 
+    #[inline]
     fn convert_colour(colour: f32) -> String {
-        (((colour) * PPM_MAX_COLOUR).min(PPM_MAX_COLOUR).max(0.0).round()).to_string()
+        ((colour * PPM_COLOUR_MULTIPLIER) as u8).to_string()
     }
 }
 

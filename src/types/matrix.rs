@@ -3,6 +3,15 @@ use std::ops::{Index, IndexMut, Mul};
 use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, SQRT_2};
 use crate::{eq, Tuple};
 
+const SUBMATRIX_INDICES_3X3: [[usize; 4]; 9] = [[4, 5, 7, 8], [3, 5, 6, 8], [3, 4, 6, 7],
+    [1, 2, 7, 8], [0, 2, 6, 8], [3, 4, 6, 7], [1, 2, 4, 5], [0, 2, 3, 5], [0, 1, 3, 4]];
+
+const SUBMATRIX_INDICES_4X4: [[usize; 9]; 16] = [[5, 6, 7, 9, 10, 11, 13, 14, 15], [4, 6, 7, 8, 10, 11, 12, 14, 15],
+    [4, 5, 7, 8, 9, 11, 12, 13, 15], [4, 5, 6, 8, 9, 10, 12, 13, 14], [1, 2, 3, 9, 10, 11, 13, 14, 15],[0, 2, 3, 8, 10, 11, 12, 14, 15],
+    [0, 1, 3, 8, 9, 11, 12, 13, 15], [0, 1, 2, 8, 9, 10, 12, 13, 14], [1, 2, 3, 5, 6, 7, 13, 14, 15], [0, 2, 3, 4, 6, 7, 12, 14, 15],
+    [0, 1, 3, 4, 5, 7, 12, 13, 15], [0, 1, 2, 4, 5, 6, 12, 13, 14], [1, 2, 3, 5, 6, 7, 9, 10, 11], [0, 2, 3, 4, 6, 7, 8, 10, 11],
+    [0, 1, 3, 4, 5, 7, 8, 9, 11], [0, 1, 2, 4, 5, 6, 8, 9, 10]];
+
 pub enum Axis {
     X,
     Y,
@@ -73,24 +82,29 @@ impl Matrix {
     }
 
     pub fn submatrix(&self, row: usize, col: usize) -> Self {
-        let mut result = Self::default(self.size - 1);
-        let size = self.size;
+        if self.size == 4 {
+            let keep = SUBMATRIX_INDICES_4X4[row * 4 + col];
+            Self::new_3x3([
+                self.values[keep[0]], self.values[keep[1]], self.values[keep[2]],
+                self.values[keep[3]],self.values[keep[4]], self.values[keep[5]],
+                self.values[keep[6]], self.values[keep[7]],self.values[keep[8]]
+            ])
 
-        let mut result_index = 0;
-        for (i, item) in self.values.iter().enumerate() {
-                if (i < row * size || i > (row + 1) * size - 1) && (i - col) % size != 0 {
-                    result.values[result_index] = *item;
-                    result_index += 1;
-                }
         }
-
-        result
+        else if self.size == 3 {
+            let keep = SUBMATRIX_INDICES_3X3[row * 3 + col];
+            Self::new_2x2([self.values[keep[0]], self.values[keep[1]], self.values[keep[2]], self.values[keep[3]]])
+        }
+        else {
+            panic!("{} sized matrixes don't support submatrix operations", self.size);
+        }
     }
 
     pub fn minor(&self, row: usize, col: usize) -> f32 {
         self.submatrix(row, col).determinant()
     }
 
+    //#[inline]
     pub fn cofactor(&self, row: usize, col: usize) -> f32 {
         if (row + col) % 2 == 0 {
             self.minor(row, col)

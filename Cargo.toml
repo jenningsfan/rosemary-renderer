@@ -6,3 +6,10 @@ edition = "2021"
 [dependencies]
 derive_more = "0.99.18"
 uuid = { version = "1.9.1", features = ["v4"] }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "matrix"
+harness = false
