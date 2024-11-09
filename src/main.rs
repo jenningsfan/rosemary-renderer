@@ -4,8 +4,7 @@ use rosemary_renderer::types::light::PointLight;
 use rosemary_renderer::types::material::Material;
 use rosemary_renderer::types::ray::Ray;
 use rosemary_renderer::types::sphere::Sphere;
-use rosemary_renderer::types::intersection::hit;
-use rosemary_renderer::{tick, types::{canvas::Canvas, colour::Colour}, Enviroment, Projectile, Tuple, Matrix};
+use rosemary_renderer::{tick, types::{canvas::Canvas, colour::Colour, intersection::Intersection}, Enviroment, Projectile, Tuple, Matrix};
 
 fn projectile_fun() {
 // projectile fun things
@@ -103,7 +102,7 @@ fn sphere_fun() {
             let position = Tuple::point(world_x, world_y, wall_z);
 
             let ray = Ray::new(ray_origin, (position - ray_origin).norm());
-            if let Some(hit) = hit(sphere.intersect(ray)) {
+            if let Some(hit) = Intersection::hit(sphere.intersect(ray)) {
                 let hit_point = ray.position(hit.t);
                 let hit_norm = hit.obj.normal(hit_point);
                 let eye = -ray.direction;

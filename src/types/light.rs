@@ -1,6 +1,6 @@
 use crate::types::{colour::Colour, tuple::Tuple};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PointLight {
     pub intensity: Colour,
     pub pos: Tuple
@@ -28,6 +28,5 @@ mod tests {
         let light = PointLight::new(col, pos);
         assert_eq!(light.intensity, col);
         assert_eq!(light.pos, pos);
-
     }
 }
