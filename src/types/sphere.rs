@@ -25,7 +25,7 @@ impl Sphere {
         self.transform_inverse = transform.inverse().unwrap();
     }
 
-    pub fn intersect(&self, ray: Ray) -> Vec<Intersection> {
+    pub fn intersect(&self, ray: &Ray) -> Vec<Intersection> {
         let ray = ray.transform(self.transform_inverse);
 
         let sphere_ray_vec = ray.origin - Tuple::point(0.0, 0.0, 0.0);
@@ -41,7 +41,7 @@ impl Sphere {
         let t1 = (-b - discriminant.sqrt()) / (2.0 * a);
         let t2 = (-b + discriminant.sqrt()) / (2.0 * a);
 
-        vec![Intersection::new(t1, *self), Intersection::new(t2, *self)]
+        vec![Intersection::new(t1, self), Intersection::new(t2, self)]
     }
 
     pub fn normal(&self, point: Tuple) -> Tuple {
@@ -80,41 +80,41 @@ mod tests {
     fn intersect() {
         let r = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
         let s = Sphere::default();
-        let inters = s.intersect(r);
+        let inters = s.intersect(&r);
         assert_eq!(inters[0].t, 4.0);
         assert_eq!(inters[1].t, 6.0);
-        assert_eq!(inters[0].obj, s);
-        assert_eq!(inters[1].obj, s);
+        assert_eq!(*inters[0].obj, s);
+        assert_eq!(*inters[1].obj, s);
 
         let r = Ray::new(Tuple::point(0.0, 1.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
         let s = Sphere::default();
-        let inters = s.intersect(r);
+        let inters = s.intersect(&r);
         assert_eq!(inters.len(), 2);
         assert_eq!(inters[0].t, 5.0);
         assert_eq!(inters[1].t, 5.0);
 
         let r = Ray::new(Tuple::point(0.0, 2.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
         let s = Sphere::default();
-        let inters = s.intersect(r);
+        let inters = s.intersect(&r);
         assert_eq!(inters.len(), 0);
 
         let r = Ray::new(Tuple::point(0.0, 0.0, 0.0), Tuple::vector(0.0, 0.0, 1.0));
         let s = Sphere::default();
-        let inters = s.intersect(r);
+        let inters = s.intersect(&r);
         assert_eq!(inters.len(), 2);
         assert_eq!(inters[0].t, -1.0);
         assert_eq!(inters[1].t, 1.0);
 
         let r = Ray::new(Tuple::point(0.0, 0.0, 5.0), Tuple::vector(0.0, 0.0, 1.0));
         let s = Sphere::default();
-        let inters = s.intersect(r);
+        let inters = s.intersect(&r);
         assert_eq!(inters.len(), 2);
         assert_eq!(inters[0].t, -6.0);
         assert_eq!(inters[1].t, -4.0);
 
         let r = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
         let mut s = Sphere::new(Matrix::scaling(2.0, 2.0, 2.0), Material::default());
-        let inters = s.intersect(r);
+        let inters = s.intersect(&r);
         dbg!(&inters);
         assert_eq!(inters.len(), 2);
         assert_eq!(inters[0].t, 3.0);
@@ -122,7 +122,7 @@ mod tests {
 
         let r = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
         let mut s = Sphere::new(Matrix::translation(5.0, 0.0, 0.0), Material::default());
-        let inters = s.intersect(r);
+        let inters = s.intersect(&r);
         assert_eq!(inters.len(), 0);
     }
 

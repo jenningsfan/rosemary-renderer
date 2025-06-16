@@ -12,7 +12,7 @@ pub struct Material {
 }
 
 impl Material {
-    pub fn lighting(&self, pos: Tuple, light: PointLight, eye: Tuple, norm: Tuple) -> Colour {
+    pub fn lighting(&self, pos: Tuple, light: &PointLight, eye: Tuple, norm: Tuple) -> Colour {
         assert!(pos.is_point());
         assert!(eye.is_vector());
         assert!(norm.is_vector());
@@ -86,7 +86,7 @@ mod tests {
         let eye = Tuple::vector(0.0, 0.0, -1.0);
         let norm = Tuple::vector(0.0, 0.0, -1.0);
         let light = PointLight::new(col, Tuple::point(0.0, 0.0, -10.0));
-        let result = material.lighting(pos, light, eye, norm);
+        let result = material.lighting(pos, &light, eye, norm);
         assert_eq!(result, Colour::new(1.9, 1.9, 1.9));
 
         // Eye between light and surface at 45deg angle off norm
@@ -95,7 +95,7 @@ mod tests {
         let eye = Tuple::vector(0.0, SQRT_2 / 2.0, -SQRT_2 / 2.0);
         let norm = Tuple::vector(0.0, 0.0, -1.0);
         let light = PointLight::new(col, Tuple::point(0.0, 0.0, -10.0));
-        let result = material.lighting(pos, light, eye, norm);
+        let result = material.lighting(pos, &light, eye, norm);
         assert_eq!(result, Colour::new(1.0, 1.0, 1.0));
 
         // Eye directly opposite surface with light at 45deg angle off norm
@@ -104,7 +104,7 @@ mod tests {
         let eye = Tuple::vector(0.0, 0.0, -1.0);
         let norm = Tuple::vector(0.0, 0.0, -1.0);
         let light = PointLight::new(col, Tuple::point(0.0, 10.0, -10.0));
-        let result = material.lighting(pos, light, eye, norm);
+        let result = material.lighting(pos, &light, eye, norm);
         assert_eq!(result, Colour::new(0.7364, 0.7364, 0.7364));
 
         // Light at 45deg angle off norm and eye directly in reflection path
@@ -112,7 +112,7 @@ mod tests {
         let eye = Tuple::vector(0.0, -SQRT_2 / 2.0, -SQRT_2 / 2.0);
         let norm = Tuple::vector(0.0, 0.0, -1.0);
         let light = PointLight::new(col, Tuple::point(0.0, 10.0, -10.0));
-        let result = material.lighting(pos, light, eye, norm);
+        let result = material.lighting(pos, &light, eye, norm);
         assert_eq!(result, Colour::new(1.6364, 1.6364, 1.6364));
 
         // Light behind surface
@@ -121,7 +121,7 @@ mod tests {
         let eye = Tuple::vector(0.0, 0.0, -1.0);
         let norm = Tuple::vector(0.0, 0.0, -1.0);
         let light = PointLight::new(col, Tuple::point(0.0, 0.0, 10.0));
-        let result = material.lighting(pos, light, eye, norm);
+        let result = material.lighting(pos, &light, eye, norm);
         assert_eq!(result, Colour::new(0.1, 0.1, 0.1));
 
     }
