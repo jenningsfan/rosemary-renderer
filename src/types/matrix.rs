@@ -59,6 +59,23 @@ impl Matrix {
         }
     }
 
+    pub fn view_transform(from: Tuple, to: Tuple, up: Tuple) -> Self {
+        assert!(from.is_point());
+        assert!(to.is_point());
+        assert!(up.is_vector());
+
+        let forward = (to - from).norm();
+        let left = forward.cross(up.norm());
+        let true_up = left.cross(forward);
+
+        Self::new_4x4([
+            left.x, left.y, left.z, 0.0,
+            true_up.x, true_up.y, true_up.z, 0.0,
+            -forward.x, -forward.y, -forward.z, 0.0,
+            0.0, 0.0, 0.0, 1.0
+        ]) * Matrix::translation(-from.x, -from.y, -from.z)
+    }
+
     pub fn transpose(&self) -> Self {
         Self::new_4x4([
             self.values[0], self.values[4], self.values[8], self.values[12],
@@ -767,5 +784,34 @@ mod tests {
 
         let shear = Matrix::shearing(2.0, 0.0, 0.0, 0.0, 0.0, 1.0);
         assert_eq!(shear * point, Tuple::point(8.0, 3.0, 7.0));
+    }
+
+    #[test]
+    fn view_transform() {
+        // default orientation is no change
+        let t = Matrix::view_transform(Tuple::point(0.0, 0.0, 0.0),
+            Tuple::point(0.0, 0.0, -1.0), Tuple::vector(0.0, 1.0, 0.0));
+        assert_eq!(t, Matrix::identity(4));
+
+        // looking backwards reflects
+        let t = Matrix::view_transform(Tuple::point(0.0, 0.0, 0.0),
+            Tuple::point(0.0, 0.0, 1.0), Tuple::vector(0.0, 1.0, 0.0));
+        assert_eq!(t, Matrix::scaling(-1.0, 1.0, -1.0));
+
+        // we move the world, not the eye
+        let t = Matrix::view_transform(Tuple::point(0.0, 0.0, 8.0),
+            Tuple::point(0.0, 0.0, 0.0), Tuple::vector(0.0, 1.0, 0.0));
+        assert_eq!(t, Matrix::translation(0.0, 0.0, -8.0));
+
+        // some random numbers
+        let t = Matrix::view_transform(Tuple::point(1.0, 3.0, 2.0),
+            Tuple::point(4.0, -2.0, 8.0), Tuple::vector(1.0, 1.0, 0.0));
+        assert_eq!(t, Matrix::new_4x4(
+            [
+                -0.50709, 0.50709, 0.67612, -2.36643,
+                0.76772, 0.60609, 0.12122, -2.82843,
+                -0.35857, 0.59761, -0.71714, 0.0,
+                0.0, 0.0, 0.0, 1.0
+            ]));
     }
 }
