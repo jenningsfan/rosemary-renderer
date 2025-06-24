@@ -8,5 +8,6 @@ pub mod intersection;
 pub mod light;
 pub mod material;
 pub mod world;
+pub mod camera;
 
 use super::eq;
