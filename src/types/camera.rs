@@ -55,7 +55,7 @@ impl Camera {
         Ray::new(origin, direction)
     }
 
-    fn render(&self, world: World) -> Canvas {
+    pub fn render(&self, world: &World) -> Canvas {
         let mut image = Canvas::new(self.hsize as usize, self.vsize as usize);
 
         for y in 0..(self.vsize as usize) {
@@ -119,7 +119,7 @@ mod tests {
         let to = Tuple::point(0.0, 0.0, 0.0);
         let up = Tuple::vector(0.0, 1.0, 0.0);
         let c = Camera::new(11.0, 11.0, PI / 2.0, Matrix::view_transform(from, to, up));
-        let image = c.render(w);
+        let image = c.render(&w);
         assert_eq!(image[(5, 5)], Colour::new(0.38066, 0.47583, 0.28550));
     }
 }

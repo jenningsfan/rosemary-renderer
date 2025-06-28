@@ -1,9 +1,11 @@
 use std::{fs::File, io::Write};
 use std::f32::consts::PI;
+use rosemary_renderer::types::camera::Camera;
 use rosemary_renderer::types::light::PointLight;
 use rosemary_renderer::types::material::Material;
 use rosemary_renderer::types::ray::Ray;
 use rosemary_renderer::types::sphere::Sphere;
+use rosemary_renderer::types::world::World;
 use rosemary_renderer::{tick, types::{canvas::Canvas, colour::Colour, intersection::Intersection}, Enviroment, Projectile, Tuple, Matrix};
 
 fn projectile_fun() {
@@ -118,9 +120,44 @@ fn sphere_fun() {
     write!(file, "{}", canvas.to_ppm()).unwrap();
 }
 
+fn world_render() {
+    let mut floor = Sphere::new(Matrix::scaling(10.0, 0.01, 10.0), Material::default());
+    floor.material.colour = Colour::new(1.0, 0.9, 0.9);
+    floor.material.specular = 0.0;
+
+    let left_wall = Sphere::new(
+        Matrix::scaling(10.0, 0.01, 10.0).rotate_x(PI / 2.0)
+        .rotate_y(- PI / 4.0).translate(0.0, 0.0, 5.0), floor.material);
+
+    let right_wall = Sphere::new(
+        Matrix::scaling(10.0, 0.01, 10.0).rotate_x(PI / 2.0)
+        .rotate_y(PI / 4.0).translate(0.0, 0.0, 5.0), floor.material);
+
+    let middle = Sphere::new(Matrix::translation(-0.5, 1.0, 0.5), 
+        Material { colour: Colour::new(0.1, 1.0, 0.5), ambient: 0.1, diffuse: 0.7, specular: 0.3, shininess: 200.0 });
+
+    let right = Sphere::new(Matrix::translation(1.5, 0.5, -0.5).scale(0.5, 0.5, 0.5), 
+        Material { colour: Colour::new(0.5, 1.0, 0.1), ambient: 0.1, diffuse: 0.7, specular: 0.3, shininess: 200.0 });
+        
+    let left = Sphere::new(Matrix::translation(-2.5, 0.33, -0.75).scale(0.33, 0.33, 0.33), 
+        Material { colour: Colour::new(1.0, 0.8, 0.1), ambient: 0.1, diffuse: 0.7, specular: 0.3, shininess: 200.0 });
+
+    let light = PointLight::new(Colour::new(1.0, 1.0, 1.0), Tuple::point(-10.0, 10.0, -10.0));
+    let world = World::new(vec![floor, left_wall, right_wall, middle, right, left], Some(light));
+
+    let cam = Camera::new(600.0, 300.0, PI / 3.0, 
+        Matrix::view_transform(Tuple::point(0.0, 1.5, -10.0),
+            Tuple::point(0.0, 0.0, 0.0), Tuple::vector(0.0, 1.0, 0.0)));
+        
+    let canvas = cam.render(&world);
+    let mut file = File::create(format!("images/world.ppm")).unwrap();
+    write!(file, "{}", canvas.to_ppm()).unwrap();
+}
+
 fn main() {
     // projectile_fun();
     // matrix_fun();
     // clock_fun();
-    sphere_fun();
+    // sphere_fun();
+    world_render();
 }
