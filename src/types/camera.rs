@@ -47,7 +47,7 @@ impl Camera {
         let world_x = self.half_width - xoffset;
         let world_y = self.half_height - yoffset;
 
-        //dbg!(self.transform);
+        dbg!(self.transform);
 
         let inv_transform = self.transform.inverse().unwrap();
         let pixel = inv_transform * Tuple::point(world_x, world_y, -1.0);

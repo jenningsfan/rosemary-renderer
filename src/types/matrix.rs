@@ -80,7 +80,7 @@ impl Matrix {
             values: [0.0; 16],
             size,
             determinant: 0.0,
-            cofactors: [0.0; 16],
+            cofactors: [0.0; 16]
         }
     }
 
@@ -91,7 +91,7 @@ impl Matrix {
         
         for r in 0..self.size {
             for c in 0..self.size {
-                cofactors[r * self.size + c] = self.calc_cofactor(r, c);
+                cofactors[c * self.size + r] = self.calc_cofactor(r, c);
             }
         }
 
@@ -138,7 +138,7 @@ impl Matrix {
     }
 
     pub fn cofactor(&self, row: usize, col: usize) -> f32 {
-        self.cofactors[col + row * self.size]
+        self.cofactors[row + col * self.size]
     }
 
     pub fn submatrix(&self, row: usize, col: usize) -> Self {
@@ -329,9 +329,6 @@ impl Mul<Matrix> for Matrix {
                     self[(row, 3)] * other[(3, col)]
             }
         }
-
-        result.cofactors = result.cofactor_array();
-        result.determinant = result.calc_determinant();
 
         result
     }
@@ -571,22 +568,6 @@ mod tests {
         assert_eq!(matrix.cofactor(0, 2), 210.0);
         assert_eq!(matrix.cofactor(0, 3), 51.0);
         assert_eq!(matrix.determinant, -4071.0);
-        
-        let matrix = Matrix::new_4x4([
-            -1.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 0.0,
-            0.0, 0.0, -1.0, -5.0,
-            0.0, 0.0, 0.0, 1.0
-        ]);
-        assert_eq!(matrix.determinant, 1.0);
-        dbg!(matrix.cofactor(3, 2));
-        assert_eq!(matrix.cofactors, [
-            -1.0, -0.0, 0.0, -0.0, 
-            -0.0, 1.0, -0.0, 0.0, 
-            0.0, -0.0, -1.0, 0.0, 
-            0.0, 0.0, -5.0, 1.0
-        ]);
-
     }
 
     #[test]

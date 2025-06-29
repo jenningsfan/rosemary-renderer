@@ -113,14 +113,15 @@ mod tests {
         assert_eq!(inters[1].t, -4.0);
 
         let r = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
-        let s = Sphere::new(Matrix::scaling(2.0, 2.0, 2.0), Material::default());
+        let mut s = Sphere::new(Matrix::scaling(2.0, 2.0, 2.0), Material::default());
         let inters = s.intersect(&r);
+        dbg!(&inters);
         assert_eq!(inters.len(), 2);
         assert_eq!(inters[0].t, 3.0);
         assert_eq!(inters[1].t, 7.0);
 
         let r = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
-        let s = Sphere::new(Matrix::translation(5.0, 0.0, 0.0), Material::default());
+        let mut s = Sphere::new(Matrix::translation(5.0, 0.0, 0.0), Material::default());
         let inters = s.intersect(&r);
         assert_eq!(inters.len(), 0);
     }
