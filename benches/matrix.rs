@@ -21,9 +21,9 @@ fn matrix_ops(c: &mut Criterion) {
     c.bench_function("4x4 matrix inversion",
     |b| b.iter(|| four.inverse()));
     c.bench_function("4x4 matrix determinant",
-    |b| b.iter(|| four.calc_determinant()));
+    |b| b.iter(|| four.determinant()));
     c.bench_function("4x4 matrix cofactor",
-    |b| b.iter(|| four.calc_cofactor(black_box(2), black_box(1))));
+    |b| b.iter(|| four.cofactor(black_box(2), black_box(1))));
 
     c.bench_function("3x3 matrix submatrixation",
         |b| b.iter(|| (three.submatrix(black_box(0), black_box(2)))));
