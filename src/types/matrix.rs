@@ -22,41 +22,80 @@ pub enum Axis {
 pub struct Matrix {
     values: [f32; 16],
     size: usize,
+    determinant: f32,
+    cofactors: [f32; 16],
 }
 
 impl Matrix {
     pub fn new_4x4(values: [f32; 16]) -> Self {
-        Self {
+        let mut result = Self {
             values,
-            size: 4
-        }
+            size: 4,
+            determinant: 0.0,
+            cofactors: [0.0; 16],
+        };
+
+        result.cofactors = result.cofactor_array();
+        result.determinant = result.calc_determinant();
+
+        result
     }
 
     pub fn new_3x3(values: [f32; 9]) -> Self {
         let mut padded_values = [0.0; 16];
         padded_values[..9].copy_from_slice(&values);
 
-        Self {
+        let mut result = Self {
             values: padded_values,
-            size: 3
-        }
+            size: 3,
+            determinant: 0.0,
+            cofactors: [0.0; 16],
+        };
+
+        result.cofactors = result.cofactor_array();
+        result.determinant = result.calc_determinant();
+
+        result
     }
 
     pub fn new_2x2(values: [f32; 4]) -> Self {
         let mut padded_values = [0.0; 16];
         padded_values[..4].copy_from_slice(&values);
 
-        Self {
+        let mut result = Self {
             values: padded_values,
-            size: 2
-        }
+            size: 2,
+            determinant: 0.0,
+            cofactors: [0.0; 16],
+        };
+
+        // result.cofactors = result.cofactor_array();
+        result.determinant = result.calc_determinant();
+
+        result
     }
 
     pub fn default(size: usize) -> Self {
         Self {
             values: [0.0; 16],
-            size
+            size,
+            determinant: 0.0,
+            cofactors: [0.0; 16]
         }
+    }
+
+    fn cofactor_array(&self) -> [f32; 16] {
+        //dbg!("cofactors calculating");
+
+        let mut cofactors = [0.0; 16];
+        
+        for r in 0..self.size {
+            for c in 0..self.size {
+                cofactors[c * self.size + r] = self.calc_cofactor(r, c);
+            }
+        }
+
+        cofactors
     }
 
     pub fn view_transform(from: Tuple, to: Tuple, up: Tuple) -> Self {
@@ -85,7 +124,7 @@ impl Matrix {
         ])
     }
 
-    pub fn determinant(&self) -> f32 {
+    pub fn calc_determinant(&self) -> f32 {
         if self.size == 2 {
             return self.values[0] * self.values[3] - self.values[1] * self.values[2];
         }
@@ -98,6 +137,10 @@ impl Matrix {
         result
     }
 
+    pub fn cofactor(&self, row: usize, col: usize) -> f32 {
+        self.cofactors[row + col * self.size]
+    }
+
     pub fn submatrix(&self, row: usize, col: usize) -> Self {
         if self.size == 4 {
             let keep = SUBMATRIX_INDICES_4X4[row * 4 + col];
@@ -106,7 +149,6 @@ impl Matrix {
                 self.values[keep[3]],self.values[keep[4]], self.values[keep[5]],
                 self.values[keep[6]], self.values[keep[7]],self.values[keep[8]]
             ])
-
         }
         else if self.size == 3 {
             let keep = SUBMATRIX_INDICES_3X3[row * 3 + col];
@@ -118,11 +160,11 @@ impl Matrix {
     }
 
     pub fn minor(&self, row: usize, col: usize) -> f32 {
-        self.submatrix(row, col).determinant()
+        self.submatrix(row, col).determinant
     }
 
     //#[inline]
-    pub fn cofactor(&self, row: usize, col: usize) -> f32 {
+    pub fn calc_cofactor(&self, row: usize, col: usize) -> f32 {
         if (row + col) % 2 == 0 {
             self.minor(row, col)
         }
@@ -132,7 +174,7 @@ impl Matrix {
     }
 
     pub fn invertible(&self) -> bool {
-        self.determinant() != 0.0
+        self.determinant != 0.0
     }
 
     pub fn inverse(&self) -> Option<Self> {
@@ -141,7 +183,7 @@ impl Matrix {
         }
 
         let mut result = Self::default(4);
-        let determinant = self.determinant();
+        let determinant = self.determinant;
 
         for row in 0..self.size {
             for col in 0..self.size {
@@ -337,6 +379,7 @@ mod tests {
             ]
         );
 
+        assert_eq!(matrix.size, 4);
         assert_eq!(matrix[(0, 0)], 1.0);
         assert_eq!(matrix[(0, 3)], 4.0);
         assert_eq!(matrix[(1, 0)], 5.5);
@@ -352,6 +395,7 @@ mod tests {
             ]
         );
 
+        assert_eq!(matrix.size, 2);
         assert_eq!(matrix[(0, 0)], -3.0);
         assert_eq!(matrix[(0, 1)], 5.0);
         assert_eq!(matrix[(1, 0)], 1.0);
@@ -365,6 +409,7 @@ mod tests {
             ]
         );
 
+        assert_eq!(matrix.size, 3);
         assert_eq!(matrix[(0, 0)], -3.0);
         assert_eq!(matrix[(1, 1)], -2.0);
         assert_eq!(matrix[(2, 2)], 1.0);
@@ -500,7 +545,7 @@ mod tests {
             1.0, 5.0,
             -3.0, 2.0
         ]);
-        assert_eq!(matrix.determinant(), 17.0);
+        assert_eq!(matrix.determinant, 17.0);
 
         let matrix = Matrix::new_3x3([
             1.0, 2.0, 6.0,
@@ -510,7 +555,7 @@ mod tests {
         assert_eq!(matrix.cofactor(0, 0), 56.0);
         assert_eq!(matrix.cofactor(0, 1), 12.0);
         assert_eq!(matrix.cofactor(0, 2), -46.0);
-        assert_eq!(matrix.determinant(), -196.0);
+        assert_eq!(matrix.determinant, -196.0);
 
         let matrix = Matrix::new_4x4([
             -2.0, -8.0, 3.0, 5.0,
@@ -522,7 +567,7 @@ mod tests {
         assert_eq!(matrix.cofactor(0, 1), 447.0);
         assert_eq!(matrix.cofactor(0, 2), 210.0);
         assert_eq!(matrix.cofactor(0, 3), 51.0);
-        assert_eq!(matrix.determinant(), -4071.0);
+        assert_eq!(matrix.determinant, -4071.0);
     }
 
     #[test]
@@ -564,7 +609,7 @@ mod tests {
             ]
         );
         let sub = matrix.submatrix(1, 0);
-        assert_eq!(sub.determinant(), 25.0);
+        assert_eq!(sub.determinant, 25.0);
         assert_eq!(matrix.minor(1, 0), 25.0)
     }
 
@@ -591,7 +636,7 @@ mod tests {
             4.0, -9.0, 3.0, -7.0,
             9.0, 1.0, 7.0, -6.0
         ]);
-        assert_eq!(matrix.determinant(), -2120.0);
+        assert_eq!(matrix.determinant, -2120.0);
         assert!(matrix.invertible());
 
         let matrix = Matrix::new_4x4([
@@ -600,7 +645,7 @@ mod tests {
             0.0, -5.0, 1.0, -5.0,
             0.0, 0.0, 0.0, 0.0
         ]);
-        assert_eq!(matrix.determinant(), 0.0);
+        assert_eq!(matrix.determinant, 0.0);
         assert!(!matrix.invertible());
 
         let matrix = Matrix::new_4x4([
@@ -617,7 +662,7 @@ mod tests {
             -0.52256, -0.81391, -0.30075, 0.30639
         ]);
 
-        assert_eq!(matrix.determinant(), 532.0);
+        assert_eq!(matrix.determinant, 532.0);
         assert_eq!(matrix.cofactor(2, 3), -160.0);
         assert_eq!(inverted[(3, 2)], -160.0/532.0);
         assert_eq!(matrix.cofactor(3, 2), 105.0);
