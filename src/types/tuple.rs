@@ -1,5 +1,5 @@
 use crate::Matrix;
-use std::ops::{Mul, Div, MulAssign, DivAssign};
+use std::ops::{Mul, Div, MulAssign};
 
 use derive_more::{Add, Sub, Neg, AddAssign, SubAssign, MulAssign};
 use super::eq;

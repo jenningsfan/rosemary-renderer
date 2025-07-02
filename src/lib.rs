@@ -2,7 +2,7 @@ pub mod types;
 pub use types::tuple::Tuple;
 pub use types::matrix::Matrix;
 
-const EPSILON: f32 = 0.0001;
+pub const EPSILON: f32 = 0.0001;
 
 fn eq(a: f32, b: f32) -> bool {
     (a - b).abs() < EPSILON

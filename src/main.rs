@@ -105,11 +105,11 @@ fn sphere_fun() {
             let position = Tuple::point(world_x, world_y, wall_z);
 
             let ray = Ray::new(ray_origin, (position - ray_origin).norm());
-            if let Some(hit) = Intersection::hit(sphere.intersect(&ray)) {
+            if let Some(hit) = Intersection::hit(&sphere.intersect(&ray)) {
                 let hit_point = ray.position(hit.t);
                 let hit_norm = hit.obj.normal(hit_point);
                 let eye = -ray.direction;
-                let col = hit.obj.material.lighting(hit_point, &light, eye, hit_norm);
+                let col = hit.obj.material.lighting(hit_point, &light, eye, hit_norm, false);
 
                 canvas[(x, y)] = col;
             }
@@ -136,18 +136,18 @@ fn world_render() {
     let middle = Sphere::new(Matrix::translation(-0.5, 1.0, 0.5), 
         Material { colour: Colour::new(0.1, 1.0, 0.5), ambient: 0.1, diffuse: 0.7, specular: 0.3, shininess: 200.0 });
 
-    let right = Sphere::new(Matrix::translation(1.5, 0.5, -0.5).scale(0.5, 0.5, 0.5), 
+    let right = Sphere::new(Matrix::scaling(0.5, 0.5, 0.5).translate(1.5, 0.5, -0.5), 
         Material { colour: Colour::new(0.5, 1.0, 0.1), ambient: 0.1, diffuse: 0.7, specular: 0.3, shininess: 200.0 });
         
-    let left = Sphere::new(Matrix::translation(-2.5, 0.33, -0.75).scale(0.33, 0.33, 0.33), 
+    let left = Sphere::new(Matrix::scaling(0.33, 0.33, 0.33).translate(-1.5, 0.33, -0.75), 
         Material { colour: Colour::new(1.0, 0.8, 0.1), ambient: 0.1, diffuse: 0.7, specular: 0.3, shininess: 200.0 });
 
     let light = PointLight::new(Colour::new(1.0, 1.0, 1.0), Tuple::point(-10.0, 10.0, -10.0));
     let world = World::new(vec![floor, left_wall, right_wall, middle, right, left], Some(light));
 
-    let cam = Camera::new(600.0, 300.0, PI / 3.0, 
-        Matrix::view_transform(Tuple::point(0.0, 1.5, -10.0),
-            Tuple::point(0.0, 0.0, 0.0), Tuple::vector(0.0, 1.0, 0.0)));
+    let cam = Camera::new(1000.0, 500.0, PI / 3.0, 
+        Matrix::view_transform(Tuple::point(0.0, 1.5, -5.0),
+            Tuple::point(0.0, 1.0, 0.0), Tuple::vector(0.0, 1.0, 0.0)));
         
     let canvas = cam.render(&world);
     let mut file = File::create(format!("images/world.ppm")).unwrap();

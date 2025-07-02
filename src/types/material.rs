@@ -12,7 +12,7 @@ pub struct Material {
 }
 
 impl Material {
-    pub fn lighting(&self, pos: Tuple, light: &PointLight, eye: Tuple, norm: Tuple) -> Colour {
+    pub fn lighting(&self, pos: Tuple, light: &PointLight, eye: Tuple, norm: Tuple, shadow: bool) -> Colour {
         assert!(pos.is_point());
         assert!(eye.is_vector());
         assert!(norm.is_vector());
@@ -25,7 +25,7 @@ impl Material {
         let light_dot_norm = light_vec * norm ; // dot of light vec and norm is cos of their angles
         
         // neg means light behind surface as it is cos
-        if light_dot_norm < 0.0 {
+        if light_dot_norm < 0.0 || shadow {
             // as light is behind, no specular or diffuse so only ambient does stuff
             return ambient;
         }
@@ -86,7 +86,7 @@ mod tests {
         let eye = Tuple::vector(0.0, 0.0, -1.0);
         let norm = Tuple::vector(0.0, 0.0, -1.0);
         let light = PointLight::new(col, Tuple::point(0.0, 0.0, -10.0));
-        let result = material.lighting(pos, &light, eye, norm);
+        let result = material.lighting(pos, &light, eye, norm, false);
         assert_eq!(result, Colour::new(1.9, 1.9, 1.9));
 
         // Eye between light and surface at 45deg angle off norm
@@ -95,7 +95,7 @@ mod tests {
         let eye = Tuple::vector(0.0, SQRT_2 / 2.0, -SQRT_2 / 2.0);
         let norm = Tuple::vector(0.0, 0.0, -1.0);
         let light = PointLight::new(col, Tuple::point(0.0, 0.0, -10.0));
-        let result = material.lighting(pos, &light, eye, norm);
+        let result = material.lighting(pos, &light, eye, norm, false);
         assert_eq!(result, Colour::new(1.0, 1.0, 1.0));
 
         // Eye directly opposite surface with light at 45deg angle off norm
@@ -104,7 +104,7 @@ mod tests {
         let eye = Tuple::vector(0.0, 0.0, -1.0);
         let norm = Tuple::vector(0.0, 0.0, -1.0);
         let light = PointLight::new(col, Tuple::point(0.0, 10.0, -10.0));
-        let result = material.lighting(pos, &light, eye, norm);
+        let result = material.lighting(pos, &light, eye, norm, false);
         assert_eq!(result, Colour::new(0.7364, 0.7364, 0.7364));
 
         // Light at 45deg angle off norm and eye directly in reflection path
@@ -112,17 +112,25 @@ mod tests {
         let eye = Tuple::vector(0.0, -SQRT_2 / 2.0, -SQRT_2 / 2.0);
         let norm = Tuple::vector(0.0, 0.0, -1.0);
         let light = PointLight::new(col, Tuple::point(0.0, 10.0, -10.0));
-        let result = material.lighting(pos, &light, eye, norm);
+        let result = material.lighting(pos, &light, eye, norm, false);
         assert_eq!(result, Colour::new(1.6364, 1.6364, 1.6364));
 
         // Light behind surface
         // Only ambient (0.1 + 0 + 0 = 0.1)
-        // No ambient or specular
+        // No diffuse or specular
         let eye = Tuple::vector(0.0, 0.0, -1.0);
         let norm = Tuple::vector(0.0, 0.0, -1.0);
         let light = PointLight::new(col, Tuple::point(0.0, 0.0, 10.0));
-        let result = material.lighting(pos, &light, eye, norm);
+        let result = material.lighting(pos, &light, eye, norm, false);
         assert_eq!(result, Colour::new(0.1, 0.1, 0.1));
 
-    }
+        // In shadown
+        // Only ambient
+        // No diffuse or specular
+        let eye = Tuple::vector(0.0, 0.0, -1.0);
+        let norm = Tuple::vector(0.0, 0.0, -1.0);
+        let light = PointLight::new(col, Tuple::point(0.0, 0.0, -10.0));
+        let result = material.lighting(pos, &light, eye, norm, true);
+        assert_eq!(result, Colour::new(0.1, 0.1, 0.1));
+    } 
 }

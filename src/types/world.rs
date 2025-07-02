@@ -29,16 +29,17 @@ impl World {
 
     pub fn shade_hit(&self, comps: &IntersectionComps) -> Colour {
         comps.obj.material.lighting(
-            comps.point,
+            comps.over_point,
             &self.light.unwrap(),
             comps.eye,
-            comps.normal
+            comps.normal,
+            self.is_shadowed(comps.over_point)
         )
     }
 
     pub fn colour_at(&self, ray: &Ray) -> Colour {
         let intersections = self.intersect(ray);
-        let hit = Intersection::hit(intersections);
+        let hit = Intersection::hit(&intersections);
 
         if let Some(hit) = hit {
             let comps = hit.comps(ray);
@@ -47,6 +48,20 @@ impl World {
         else {
             Colour::black()
         }
+    }
+
+    pub fn is_shadowed(&self, point: Tuple) -> bool {
+        assert!(point.is_point());
+
+        let vec_point_light = self.light.unwrap().pos - point;
+        let distance = vec_point_light.magnitude();
+        let direction = vec_point_light.norm();
+
+        let ray = Ray::new(point, direction);
+        let inters = self.intersect(&ray);
+        let hit = Intersection::hit(&inters);
+
+        hit.map_or(false, |hit| hit.t < distance)
     }
 }
 
@@ -135,5 +150,33 @@ mod tests {
         let r = Ray::new(Tuple::point(0.0, 0.0, 0.75), Tuple::vector(0.0, 0.0, -1.0));
         let c = w.colour_at(&r);
         assert_eq!(c, w.objects[1].material.colour);
+    }
+
+    #[test]
+    fn is_shadowed() {
+        let w = World::default();
+        let p = Tuple::point(0.0, 10.0, 0.0);
+        assert_eq!(w.is_shadowed(p), false); // nothing colinear
+
+        let p = Tuple::point(10.0, -10.0, 10.0);
+        assert_eq!(w.is_shadowed(p), true); // far side
+
+        let p = Tuple::point(-20.0, 20.0, -20.0);
+        assert_eq!(w.is_shadowed(p), false); // between object behind light
+
+        let p = Tuple::point(-2.0, 2.0, -2.0);
+        assert_eq!(w.is_shadowed(p), false); //object behind point
+    }
+
+    #[test]
+    fn shade_hit_shadow() {
+        let s2 = Sphere::new(Matrix::translation(0.0, 0.0, 10.0), Material::default());
+        let w = World::new(vec![Sphere::default(), s2], 
+        Some(PointLight::new(Colour::new(1.0, 1.0, 1.0), Tuple::point(0.0, 0.0, -10.0))));
+        let r = Ray::new(Tuple::point(0.0,0.0, 5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let inter = Intersection::new(4.0, &s2);
+        let comps = inter.comps(&r);
+        let c = w.shade_hit(&comps);
+        assert_eq!(c, Colour::new(0.1, 0.1, 0.1));
     }
 }

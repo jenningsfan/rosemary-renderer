@@ -1,6 +1,5 @@
 use core::panic;
 use std::ops::{Index, IndexMut, Mul};
-use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, SQRT_2};
 use crate::{eq, Tuple};
 
 const SUBMATRIX_INDICES_3X3: [[usize; 4]; 9] = [[4, 5, 7, 8], [3, 5, 6, 8], [3, 4, 6, 7],
